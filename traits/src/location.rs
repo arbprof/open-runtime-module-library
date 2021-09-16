@@ -1,4 +1,4 @@
-use xcm::v0::{
+use xcm::v1::{
 	Junction::{self, *},
 	MultiAsset, MultiLocation,
 };

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sp_io::TestExternalities;
 use sp_runtime::AccountId32;
 
-use xcm::v0::{Junction, MultiLocation};
+use xcm::v1::{Junction, MultiLocation};
 use xcm_simulator::{decl_test_network, decl_test_parachain, decl_test_relay_chain};
 
 pub mod para;

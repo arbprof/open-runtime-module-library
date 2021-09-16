@@ -8,7 +8,7 @@ use mock::*;
 use orml_traits::MultiCurrency;
 use polkadot_parachain::primitives::{AccountIdConversion, Sibling};
 use sp_runtime::AccountId32;
-use xcm::v0::{Junction, NetworkId, Order};
+use xcm::v1::{Junction, NetworkId, Order};
 use xcm_simulator::TestExt;
 
 fn para_a_account() -> AccountId32 {
@@ -351,7 +351,7 @@ fn send_as_sovereign() {
 	});
 
 	ParaA::execute_with(|| {
-		use xcm::v0::OriginKind::SovereignAccount;
+		use xcm::v1::OriginKind::SovereignAccount;
 
 		let call = relay::Call::System(frame_system::Call::<relay::Runtime>::remark_with_event(vec![1, 1, 1]));
 		assert_ok!(para::OrmlXcm::send_as_sovereign(
@@ -396,7 +396,7 @@ fn send_as_sovereign_fails_if_bad_origin() {
 	});
 
 	ParaA::execute_with(|| {
-		use xcm::v0::OriginKind::SovereignAccount;
+		use xcm::v1::OriginKind::SovereignAccount;
 
 		let call = relay::Call::System(frame_system::Call::<relay::Runtime>::remark_with_event(vec![1, 1, 1]));
 		assert_err!(

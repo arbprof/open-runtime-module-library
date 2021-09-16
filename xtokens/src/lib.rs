@@ -30,7 +30,7 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 
-use xcm::v0::prelude::*;
+use xcm::v1::prelude::*;
 use xcm_executor::traits::WeightBounds;
 
 pub use module::*;

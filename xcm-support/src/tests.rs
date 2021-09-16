@@ -4,7 +4,7 @@
 
 use super::*;
 
-use xcm::v0::{Junction::*, MultiAsset::ConcreteFungible, MultiLocation::*};
+use xcm::v1::{Junction::*, MultiAsset::ConcreteFungible, MultiLocation::*};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TestCurrencyId {

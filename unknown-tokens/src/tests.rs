@@ -6,7 +6,7 @@ use super::*;
 use mock::{Event, *};
 
 use frame_support::{assert_err, assert_ok};
-use xcm::v0::Junction;
+use xcm::v1::Junction;
 
 const MOCK_RECIPIENT: MultiLocation = MultiLocation::X1(Junction::Parent);
 const MOCK_CONCRETE_FUNGIBLE_ID: MultiLocation = MultiLocation::X1(Junction::Parent);

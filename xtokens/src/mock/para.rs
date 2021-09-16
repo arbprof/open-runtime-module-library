@@ -17,7 +17,7 @@ use sp_runtime::{
 use cumulus_primitives_core::{ChannelStatus, GetChannelInfo, ParaId};
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
-use xcm::v0::{
+use xcm::v1::{
 	Error as XcmError,
 	Junction::{self, Parachain, Parent},
 	MultiAsset,
