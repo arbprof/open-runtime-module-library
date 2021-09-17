@@ -1,6 +1,6 @@
 use frame_support::dispatch::DispatchResult;
 use frame_support::weights::Weight;
-use xcm::opaque::v0::{MultiAsset, MultiLocation};
+use xcm::opaque::v1::{MultiAsset, MultiLocation};
 
 /// Abstraction over cross-chain token transfers.
 pub trait XcmTransfer<AccountId, Balance, CurrencyId> {

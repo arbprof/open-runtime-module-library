@@ -1,5 +1,7 @@
 use xcm::v1::{
+	AssetId, Fungibility,
 	Junction::{self, *},
+	Junctions::*,
 	MultiAsset, MultiLocation,
 };
 
@@ -11,27 +13,30 @@ pub trait Parse {
 	fn non_chain_part(&self) -> Option<MultiLocation>;
 }
 
+/// We can now just focus on the non-parent part
 fn is_chain_junction(junction: Option<&Junction>) -> bool {
-	matches!(junction, Some(Parent) | Some(Parachain(_)))
+	matches!(junction, Some(Parachain(_)))
 }
 
 impl Parse for MultiLocation {
 	fn chain_part(&self) -> Option<MultiLocation> {
-		match (self.first(), self.at(1)) {
-			(Some(Parent), Some(Parachain(id))) => Some((Parent, Parachain(*id)).into()),
-			(Some(Parent), _) => Some(Parent.into()),
-			(Some(Parachain(id)), _) => Some(Parachain(*id).into()),
+		let first_interior = self.first_interior()?;
+		let parents = self.parent_count();
+		match (parents, first_interior.clone()) {
+			(0, Parachain(id)) => Some(MultiLocation::new(0, X1(Parachain(id)))),
+			(1, Parachain(id)) => Some(MultiLocation::new(1, X1(Parachain(id)))),
+			(1, _) => Some(MultiLocation::parent()),
 			_ => None,
 		}
 	}
 
 	fn non_chain_part(&self) -> Option<MultiLocation> {
 		let mut location = self.clone();
-		while is_chain_junction(location.first()) {
-			let _ = location.take_first();
+		while is_chain_junction(location.first_interior()) {
+			let _ = location.take_first_interior();
 		}
 
-		if location != MultiLocation::Null {
+		if location.first_interior() != None {
 			Some(location)
 		} else {
 			None
@@ -46,10 +51,9 @@ pub trait Reserve {
 
 impl Reserve for MultiAsset {
 	fn reserve(&self) -> Option<MultiLocation> {
-		if let MultiAsset::ConcreteFungible { id, .. } = self {
-			id.chain_part()
-		} else {
-			None
+		match (&self.id, &self.fun) {
+			(AssetId::Concrete(id), Fungibility::Fungible(_)) => id.chain_part(),
+			_ => None,
 		}
 	}
 }

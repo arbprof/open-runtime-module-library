@@ -191,9 +191,9 @@ pub mod module {
 			let id: MultiLocation = T::CurrencyIdConvert::convert(currency_id.clone())
 				.ok_or(Error::<T>::NotCrossChainTransferableCurrency)?;
 
-			let asset = MultiAsset::ConcreteFungible {
-				id,
-				amount: amount.into(),
+			let asset = MultiAsset {
+				id: AssetId::Concrete(id),
+				fun: Fungibility::Fungible(amount.into()),
 			};
 			Self::do_transfer_multiasset(who.clone(), asset, dest.clone(), dest_weight, false)?;
 
@@ -214,12 +214,12 @@ pub mod module {
 
 			let (transfer_kind, dest, reserve, recipient) = Self::transfer_kind(&asset, &dest)?;
 			let buy_order = BuyExecution {
-				fees: All,
+				fees: asset.clone(),
 				// Zero weight for additional XCM (since there are none to execute)
 				weight: 0,
 				debt: dest_weight,
 				halt_on_error: false,
-				xcm: vec![],
+				instructions: vec![],
 			};
 			let mut msg = match transfer_kind {
 				SelfReserveAsset => {
@@ -251,11 +251,12 @@ pub mod module {
 			buy_order: Order<()>,
 		) -> Xcm<T::Call> {
 			WithdrawAsset {
-				assets: vec![asset],
+				assets: vec![asset.clone()].into(),
 				effects: vec![DepositReserveAsset {
-					assets: vec![MultiAsset::All],
+					assets: vec![asset.clone()].into(),
 					dest,
-					effects: vec![buy_order, Self::deposit_asset(recipient)],
+					effects: vec![buy_order, Self::deposit_asset(asset, recipient)],
+					max_assets: 1,
 				}],
 			}
 		}
@@ -267,11 +268,11 @@ pub mod module {
 			buy_order: Order<()>,
 		) -> Xcm<T::Call> {
 			WithdrawAsset {
-				assets: vec![asset],
+				assets: vec![asset.clone()].into(),
 				effects: vec![InitiateReserveWithdraw {
-					assets: vec![MultiAsset::All],
+					assets: vec![asset.clone()].into(),
 					reserve,
-					effects: vec![buy_order, Self::deposit_asset(recipient)],
+					effects: vec![buy_order, Self::deposit_asset(asset, recipient)],
 				}],
 			}
 		}
@@ -285,43 +286,57 @@ pub mod module {
 		) -> Xcm<T::Call> {
 			let mut reanchored_dest = dest.clone();
 			if reserve == Parent.into() {
-				if let MultiLocation::X2(Parent, Parachain(id)) = dest {
+				if let MultiLocation {
+					parents: 1,
+					interior: X1(Parachain(id)),
+				} = dest
+				{
 					reanchored_dest = Parachain(id).into();
 				}
 			}
 
 			WithdrawAsset {
-				assets: vec![asset],
+				assets: vec![asset.clone()].into(),
 				effects: vec![InitiateReserveWithdraw {
-					assets: vec![MultiAsset::All],
+					assets: vec![asset.clone()].into(),
 					reserve,
 					effects: vec![
 						buy_order.clone(),
 						DepositReserveAsset {
-							assets: vec![MultiAsset::All],
+							assets: vec![asset.clone()].into(),
 							dest: reanchored_dest,
-							effects: vec![buy_order, Self::deposit_asset(recipient)],
+							effects: vec![buy_order, Self::deposit_asset(asset, recipient)],
+							max_assets: 1,
 						},
 					],
 				}],
 			}
 		}
 
-		fn deposit_asset(recipient: MultiLocation) -> Order<()> {
+		fn deposit_asset(asset: MultiAsset, recipient: MultiLocation) -> Order<()> {
 			DepositAsset {
-				assets: vec![MultiAsset::All],
-				dest: recipient,
+				assets: vec![asset].into(),
+				max_assets: 1,
+				beneficiary: recipient,
 			}
 		}
 
 		fn is_zero_amount(asset: &MultiAsset) -> bool {
-			if let MultiAsset::ConcreteFungible { id: _, amount } = asset {
+			if let MultiAsset {
+				id: AssetId::Concrete(_),
+				fun: Fungibility::Fungible(amount),
+			} = asset
+			{
 				if amount.is_zero() {
 					return true;
 				}
 			}
 
-			if let MultiAsset::AbstractFungible { id: _, amount } = asset {
+			if let MultiAsset {
+				id: AssetId::Concrete(_),
+				fun: Fungibility::Fungible(amount),
+			} = asset
+			{
 				if amount.is_zero() {
 					return true;
 				}
@@ -377,18 +392,19 @@ pub mod module {
 			if let Ok((transfer_kind, dest, _, reserve)) = Self::transfer_kind(asset, dest) {
 				let mut msg = match transfer_kind {
 					SelfReserveAsset => WithdrawAsset {
-						assets: vec![asset.clone()],
+						assets: vec![asset.clone()].into(),
 						effects: vec![DepositReserveAsset {
-							assets: vec![All],
+							assets: vec![asset.clone()].into(),
 							dest,
+							max_assets: 1,
 							effects: vec![],
 						}],
 					},
 					ToReserve | ToNonReserve => {
 						WithdrawAsset {
-							assets: vec![asset.clone()],
+							assets: vec![asset.clone()].into(),
 							effects: vec![InitiateReserveWithdraw {
-								assets: vec![All],
+								assets: vec![asset.clone()].into(),
 								// `dest` is always (equal to) `reserve` in both cases
 								reserve,
 								effects: vec![],
@@ -405,9 +421,9 @@ pub mod module {
 		/// Returns weight of `transfer` call.
 		fn weight_of_transfer(currency_id: T::CurrencyId, amount: T::Balance, dest: &MultiLocation) -> Weight {
 			if let Some(id) = T::CurrencyIdConvert::convert(currency_id) {
-				let asset = MultiAsset::ConcreteFungible {
-					id,
-					amount: amount.into(),
+				let asset = MultiAsset {
+					id: AssetId::Concrete(id),
+					fun: Fungibility::Fungible(amount.into()),
 				};
 				Self::weight_of_transfer_multiasset(&asset, dest)
 			} else {
