@@ -303,7 +303,7 @@ pub mod module {
 					effects: vec![
 						buy_order.clone(),
 						DepositReserveAsset {
-							assets: vec![asset.clone()].into(),
+							assets: Wild(All),
 							dest: reanchored_dest,
 							effects: vec![buy_order, Self::deposit_asset(asset, recipient)],
 							max_assets: 1,
@@ -315,7 +315,7 @@ pub mod module {
 
 		fn deposit_asset(asset: MultiAsset, recipient: MultiLocation) -> Order<()> {
 			DepositAsset {
-				assets: vec![asset].into(),
+				assets: Wild(All),
 				max_assets: 1,
 				beneficiary: recipient,
 			}

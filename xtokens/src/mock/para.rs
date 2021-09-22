@@ -19,9 +19,11 @@ use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::v1::{
 	Error as XcmError,
-	Junction::{self, Parachain, Parent},
+	Junction::{self, Parachain},
 	MultiAsset,
-	MultiLocation::{self, X1, X2},
+	MultiLocation,
+	Junctions::*,
+//	MultiLocation::{self, X1, X2},
 	NetworkId,
 };
 use xcm_builder::{
@@ -110,7 +112,7 @@ parameter_types! {
 impl parachain_info::Config for Runtime {}
 
 parameter_types! {
-	pub const RelayLocation: MultiLocation = MultiLocation::X1(Parent);
+	pub const RelayLocation: MultiLocation = MultiLocation::parent();
 	pub const RelayNetwork: NetworkId = NetworkId::Kusama;
 	pub RelayChainOrigin: Origin = cumulus_pallet_xcm::Origin::Relay.into();
 	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
@@ -154,7 +156,7 @@ pub type Barrier = (TakeWeightCredit, AllowTopLevelPaidExecutionFrom<Everything>
 pub struct AllTokensAreCreatedEqualToWeight(MultiLocation);
 impl WeightTrader for AllTokensAreCreatedEqualToWeight {
 	fn new() -> Self {
-		Self(MultiLocation::Null)
+		Self(MultiLocation::default())
 	}
 
 	fn buy_weight(&mut self, weight: Weight, payment: Assets) -> Result<Assets, XcmError> {
