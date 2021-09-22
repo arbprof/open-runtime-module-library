@@ -20,11 +20,11 @@ fn is_chain_junction(junction: Option<&Junction>) -> bool {
 
 impl Parse for MultiLocation {
 	fn chain_part(&self) -> Option<MultiLocation> {
-		let first_interior = self.first_interior()?;
+		let first_interior = self.first_interior();
 		let parents = self.parent_count();
 		match (parents, first_interior.clone()) {
-			(0, Parachain(id)) => Some(MultiLocation::new(0, X1(Parachain(id)))),
-			(1, Parachain(id)) => Some(MultiLocation::new(1, X1(Parachain(id)))),
+			(0, Some(Parachain(id))) => Some(MultiLocation::new(0, X1(Parachain(id.clone())))),
+			(1, Some(Parachain(id))) => Some(MultiLocation::new(1, X1(Parachain(id.clone())))),
 			(1, _) => Some(MultiLocation::parent()),
 			_ => None,
 		}
