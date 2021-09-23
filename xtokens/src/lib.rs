@@ -324,7 +324,7 @@ pub mod module {
 			})
 		}
 
-		fn deposit_asset(asset: MultiAsset, recipient: MultiLocation) -> Order<()> {
+		fn deposit_asset(recipient: MultiLocation) -> Order<()> {
 			DepositAsset {
 				assets: All.into(),
 				max_assets: u32::max_value(),
@@ -393,7 +393,6 @@ pub mod module {
 						effects: vec![DepositReserveAsset {
 							assets: All.into(),
 							dest,
-							max_assets: 1,
 							effects: vec![],
 							max_assets: u32::max_value(),
 						}],
