@@ -1,9 +1,5 @@
-use xcm::v1::{
-	AssetId, Fungibility,
-	Junction::{self, *},
-	Junctions::*,
-	MultiAsset, MultiLocation,
-};
+use sp_std::prelude::*;
+use xcm::latest::prelude::*;
 
 pub trait Parse {
 	/// Returns the "chain" location part. It could be parent, sibling
@@ -20,27 +16,25 @@ fn is_chain_junction(junction: Option<&Junction>) -> bool {
 
 impl Parse for MultiLocation {
 	fn chain_part(&self) -> Option<MultiLocation> {
-		let first_interior = self.first_interior();
-		let parents = self.parent_count();
-		match (parents, first_interior.clone()) {
-			(0, Some(Parachain(id))) => Some(MultiLocation::new(0, X1(Parachain(id.clone())))),
-			(1, Some(Parachain(id))) => Some(MultiLocation::new(1, X1(Parachain(id.clone())))),
+		match (self.parents, self.first_interior()) {
+			// sibling parachain
+			(1, Some(Parachain(id))) => Some(MultiLocation::new(1, X1(Parachain(*id)))),
+			// parent
 			(1, _) => Some(MultiLocation::parent()),
+			// children parachain
+			(0, Some(Parachain(id))) => Some(MultiLocation::new(0, X1(Parachain(*id)))),
 			_ => None,
 		}
 	}
 
 	fn non_chain_part(&self) -> Option<MultiLocation> {
-		let mut location = self.clone();
-		while is_chain_junction(location.first_interior()) {
-			let _ = location.take_first_interior();
+		let mut junctions = self.interior().clone();
+		while is_chain_junction(junctions.first()) {
+			let _ = junctions.take_first();
 		}
 
-		if location.first_interior() != None {
-			Some(MultiLocation {
-				parents: 0,
-				interior: location.interior
-			})
+		if junctions != Here {
+			Some(MultiLocation::new(0, junctions))
 		} else {
 			None
 		}
@@ -54,10 +48,21 @@ pub trait Reserve {
 
 impl Reserve for MultiAsset {
 	fn reserve(&self) -> Option<MultiLocation> {
-		match (&self.id, &self.fun) {
-			(AssetId::Concrete(id), Fungibility::Fungible(_)) => id.chain_part(),
-			_ => None,
+		if let Concrete(location) = &self.id {
+			location.chain_part()
+		} else {
+			None
 		}
+	}
+}
+
+pub trait RelativeLocations {
+	fn sibling_parachain_general_key(para_id: u32, general_key: Vec<u8>) -> MultiLocation;
+}
+
+impl RelativeLocations for MultiLocation {
+	fn sibling_parachain_general_key(para_id: u32, general_key: Vec<u8>) -> MultiLocation {
+		MultiLocation::new(1, X2(Parachain(para_id), GeneralKey(general_key)))
 	}
 }
 
@@ -69,19 +74,13 @@ mod tests {
 	const GENERAL_INDEX: Junction = GeneralIndex(1);
 
 	fn concrete_fungible(id: MultiLocation) -> MultiAsset {
-		MultiAsset {
-			id: AssetId::Concrete(id),
-			fun: Fungibility::Fungible(1)
-		} 
+		(id, 1).into()
 	}
 
 	#[test]
 	fn parent_as_reserve_chain() {
 		assert_eq!(
-			concrete_fungible(MultiLocation {
-				parents: 1,
-				interior: X1(GENERAL_INDEX)
-			}).reserve(),
+			concrete_fungible(MultiLocation::new(1, X1(GENERAL_INDEX))).reserve(),
 			Some(MultiLocation::parent())
 		);
 	}
@@ -89,10 +88,7 @@ mod tests {
 	#[test]
 	fn sibling_parachain_as_reserve_chain() {
 		assert_eq!(
-			concrete_fungible(MultiLocation {
-				parents: 1,
-				interior: X2(PARACHAIN, GENERAL_INDEX)
-			}).reserve(),
+			concrete_fungible(MultiLocation::new(1, X2(PARACHAIN, GENERAL_INDEX))).reserve(),
 			Some(MultiLocation::new(1, X1(PARACHAIN)))
 		);
 	}
@@ -100,21 +96,15 @@ mod tests {
 	#[test]
 	fn child_parachain_as_reserve_chain() {
 		assert_eq!(
-			concrete_fungible(MultiLocation {
-				parents: 0,
-				interior: X2(PARACHAIN, GENERAL_INDEX)
-			}).reserve(),
-			Some(MultiLocation::new(0, X1(PARACHAIN)))
+			concrete_fungible(MultiLocation::new(0, X2(PARACHAIN, GENERAL_INDEX))).reserve(),
+			Some(PARACHAIN.into())
 		);
 	}
 
 	#[test]
 	fn no_reserve_chain() {
 		assert_eq!(
-			concrete_fungible(MultiLocation {
-				parents: 0,
-				interior: X1(GeneralKey("DOT".into()))
-			}).reserve(),
+			concrete_fungible(MultiLocation::new(0, X1(GeneralKey("DOT".into())))).reserve(),
 			None
 		);
 	}
@@ -122,34 +112,24 @@ mod tests {
 	#[test]
 	fn non_chain_part_works() {
 		assert_eq!(MultiLocation::parent().non_chain_part(), None);
-		assert_eq!(MultiLocation {
-			parents: 1,
-			interior: X1(PARACHAIN)
-		}.non_chain_part(), None);
+		assert_eq!(MultiLocation::new(1, X1(PARACHAIN)).non_chain_part(), None);
+		assert_eq!(MultiLocation::new(0, X1(PARACHAIN)).non_chain_part(), None);
 
-		assert_eq!(MultiLocation {
-			parents: 0,
-			interior: X1(PARACHAIN)
-		}.non_chain_part(), None);
-
-		assert_eq!(MultiLocation {
-			parents: 1,
-			interior: X1(GENERAL_INDEX)
-		}.non_chain_part(), Some(GENERAL_INDEX.into()));
-
-		assert_eq!(MultiLocation {
-			parents: 1,
-			interior: X2(GENERAL_INDEX, GENERAL_INDEX)
-		}.non_chain_part(), Some((GENERAL_INDEX, GENERAL_INDEX).into()));
-
-		assert_eq!(MultiLocation {
-			parents: 1,
-			interior: X2(PARACHAIN, GENERAL_INDEX)
-		}.non_chain_part(), Some(GENERAL_INDEX.into()));
-
-		assert_eq!(MultiLocation {
-			parents: 0,
-			interior: X2(PARACHAIN, GENERAL_INDEX)
-		}.non_chain_part(), Some(GENERAL_INDEX.into()));
+		assert_eq!(
+			MultiLocation::new(1, X1(GENERAL_INDEX)).non_chain_part(),
+			Some(GENERAL_INDEX.into())
+		);
+		assert_eq!(
+			MultiLocation::new(1, X2(GENERAL_INDEX, GENERAL_INDEX)).non_chain_part(),
+			Some((GENERAL_INDEX, GENERAL_INDEX).into())
+		);
+		assert_eq!(
+			MultiLocation::new(1, X2(PARACHAIN, GENERAL_INDEX)).non_chain_part(),
+			Some(GENERAL_INDEX.into())
+		);
+		assert_eq!(
+			MultiLocation::new(0, X2(PARACHAIN, GENERAL_INDEX)).non_chain_part(),
+			Some(GENERAL_INDEX.into())
+		);
 	}
 }

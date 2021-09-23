@@ -28,6 +28,7 @@ std = [
 	"sp-runtime/std",
 	"sp-io/std",
 	"sp-std/std",
+	"sp-core/std",
 	"frame-support/std",
 	"frame-system/std",
 	"orml-traits/std",
