@@ -18,10 +18,10 @@ sp-std = { git = "https://github.com/purestake/substrate", branch = "moonbeam-po
 frame-support = { git = "https://github.com/purestake/substrate", branch = "moonbeam-polkadot-v0.9.12", default-features = false }
 frame-system = { git = "https://github.com/purestake/substrate", branch = "moonbeam-polkadot-v0.9.12", default-features = false }
 
-cumulus-primitives-core = { git = "https://github.com/purestake/cumulus", branch = "moonbeam-polkadot-v0.9.12", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/purestake/cumulus", branch = "notlesh-xcm-vm-no-inline", default-features = false }
 
-xcm = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12", default-features = false }
-xcm-executor = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12", default-features = false }
+xcm = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline", default-features = false }
+xcm-executor = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline", default-features = false }
 
 orml-xcm-support = { path = "../xcm-support", default-features = false }
 orml-traits = { path = "../traits", default-features = false}
@@ -31,20 +31,20 @@ sp-core = { git = "https://github.com/purestake/substrate", branch = "moonbeam-p
 pallet-balances = { git = "https://github.com/purestake/substrate", branch = "moonbeam-polkadot-v0.9.12" }
 
 # cumulus
-cumulus-primitives-core = { git = "https://github.com/purestake/cumulus", branch = "moonbeam-polkadot-v0.9.12" }
-cumulus-pallet-dmp-queue = { git = "https://github.com/purestake/cumulus", branch = "moonbeam-polkadot-v0.9.12" }
-cumulus-pallet-xcmp-queue = { git = "https://github.com/purestake/cumulus", branch = "moonbeam-polkadot-v0.9.12" }
-cumulus-pallet-xcm = { git = "https://github.com/purestake/cumulus", branch = "moonbeam-polkadot-v0.9.12" }
-parachain-info = { git = "https://github.com/purestake/cumulus", branch = "moonbeam-polkadot-v0.9.12" }
+cumulus-primitives-core = { git = "https://github.com/purestake/cumulus", branch = "notlesh-xcm-vm-no-inline" }
+cumulus-pallet-dmp-queue = { git = "https://github.com/purestake/cumulus", branch = "notlesh-xcm-vm-no-inline" }
+cumulus-pallet-xcmp-queue = { git = "https://github.com/purestake/cumulus", branch = "notlesh-xcm-vm-no-inline" }
+cumulus-pallet-xcm = { git = "https://github.com/purestake/cumulus", branch = "notlesh-xcm-vm-no-inline" }
+parachain-info = { git = "https://github.com/purestake/cumulus", branch = "notlesh-xcm-vm-no-inline" }
 
 # polkadot
-polkadot-parachain = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12" }
-xcm = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12" }
-xcm-executor = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12" }
-xcm-builder = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12" }
-pallet-xcm = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12" }
-polkadot-runtime-parachains = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12" }
-xcm-simulator = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.12"}
+polkadot-parachain = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline" }
+xcm = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline" }
+xcm-executor = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline" }
+xcm-builder = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline" }
+pallet-xcm = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline" }
+polkadot-runtime-parachains = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline" }
+xcm-simulator = { git = "https://github.com/purestake/polkadot", branch = "notlesh-xcm-vm-no-inline"}
 
 orml-tokens = { path = "../tokens" }
 orml-xcm = { path = "../xcm" }
