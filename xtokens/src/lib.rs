@@ -237,6 +237,7 @@ pub mod module {
 				}
 				ToReserve => Self::transfer_to_reserve(asset.clone(), dest.clone(), recipient, dest_weight)?,
 				ToNonReserve => {
+					let reserve = reserve.ok_or(Error::<T>::AssetHasNoReserve)?;
 					Self::transfer_to_non_reserve(asset.clone(), reserve, dest.clone(), recipient, dest_weight)?
 				}
 			};
@@ -374,16 +375,17 @@ pub mod module {
 		fn transfer_kind(
 			asset: &MultiAsset,
 			dest: &MultiLocation,
-		) -> Result<(TransferKind, MultiLocation, MultiLocation, MultiLocation), DispatchError> {
+		) -> Result<(TransferKind, MultiLocation, Option<MultiLocation>, MultiLocation), DispatchError> {
 			let (dest, recipient) = Self::ensure_valid_dest(dest)?;
 
 			let self_location = T::SelfLocation::get();
 			ensure!(dest != self_location, Error::<T>::NotCrossChainTransfer);
 
-			let reserve = asset.reserve().ok_or(Error::<T>::AssetHasNoReserve)?;
-			let transfer_kind = if reserve == self_location {
+			let reserve = asset.reserve();
+			
+			let transfer_kind = if reserve == None {
 				SelfReserveAsset
-			} else if reserve == dest {
+			} else if reserve == Some(dest.clone()) {
 				ToReserve
 			} else {
 				ToNonReserve
@@ -399,31 +401,32 @@ pub mod module {
 			let asset = asset.clone().try_into();
 			let dest = dest.clone().try_into();
 			if let (Ok(asset), Ok(dest)) = (asset, dest) {
-				if let Ok((transfer_kind, dest, _, reserve)) = Self::transfer_kind(&asset, &dest) {
-					let mut msg = match transfer_kind {
-						SelfReserveAsset => Xcm(vec![
-							WithdrawAsset(MultiAssets::from(asset.clone())),
-							DepositReserveAsset {
-								assets: All.into(),
-								max_assets: 1,
-								dest,
-								xcm: Xcm(vec![]),
-							},
-						]),
-						ToReserve | ToNonReserve => Xcm(vec![
-							WithdrawAsset(MultiAssets::from(asset.clone())),
-							InitiateReserveWithdraw {
-								assets: All.into(),
-								// `dest` is always (equal to) `reserve` in both cases
-								reserve,
-								xcm: Xcm(vec![]),
-							},
-						]),
-					};
-					return T::Weigher::weight(&mut msg)
-						.map_or(Weight::max_value(), |w| T::BaseXcmWeight::get().saturating_add(w));
-				}
+
+			if let Ok((transfer_kind, dest, _, reserve)) = Self::transfer_kind(&asset, &dest) {
+				let mut msg = match transfer_kind {
+					SelfReserveAsset => Xcm(vec![
+						WithdrawAsset(MultiAssets::from(asset.clone())),
+						DepositReserveAsset {
+							assets: All.into(),
+							max_assets: 1,
+							dest,
+							xcm: Xcm(vec![]),
+						},
+					]),
+					ToReserve | ToNonReserve => Xcm(vec![
+						WithdrawAsset(MultiAssets::from(asset.clone())),
+						InitiateReserveWithdraw {
+							assets: All.into(),
+							// `dest` is always (equal to) `reserve` in both cases
+							reserve,
+							xcm: Xcm(vec![]),
+						},
+					]),
+				};
+				return T::Weigher::weight(&mut msg)
+					.map_or(Weight::max_value(), |w| T::BaseXcmWeight::get().saturating_add(w));
 			}
+		}
 			0
 		}
 
