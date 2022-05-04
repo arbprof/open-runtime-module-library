@@ -39,45 +39,81 @@ pub enum CurrencyId {
 pub struct CurrencyIdConvert;
 impl Convert<CurrencyId, Option<MultiLocation>> for CurrencyIdConvert {
 	fn convert(id: CurrencyId) -> Option<MultiLocation> {
-		match id {
-			CurrencyId::R => Some(Parent.into()),
-			CurrencyId::A => Some((Parent, Parachain(1), GeneralKey("A".into())).into()),
-			CurrencyId::A1 => Some((Parent, Parachain(1), GeneralKey("A1".into())).into()),
-			CurrencyId::B => Some((Parent, Parachain(2), GeneralKey("B".into())).into()),
-			CurrencyId::B1 => Some((Parent, Parachain(2), GeneralKey("B1".into())).into()),
-			CurrencyId::B2 => Some((Parent, Parachain(2), GeneralKey("B2".into())).into()),
-			CurrencyId::D => Some((Parent, Parachain(4), GeneralKey("D".into())).into()),
-		}
-	}
-}
-impl Convert<MultiLocation, Option<CurrencyId>> for CurrencyIdConvert {
-	fn convert(l: MultiLocation) -> Option<CurrencyId> {
+		let mut key_a = [0u8;32];
+		let mut key_a1 = [0u8;32];
+		let mut key_b = [0u8;32];
+		let mut key_b1 = [0u8;32];
+		let mut key_b2 = [0u8;32];
+		let mut key_d = [0u8;32];
+
 		let a: Vec<u8> = "A".into();
 		let a1: Vec<u8> = "A1".into();
 		let b: Vec<u8> = "B".into();
 		let b1: Vec<u8> = "B1".into();
 		let b2: Vec<u8> = "B2".into();
 		let d: Vec<u8> = "D".into();
+
+		key_a[0..a.len()].copy_from_slice(a.as_slice());
+		key_a1[0..a1.len()].copy_from_slice(a1.as_slice());
+		key_b[0..b.len()].copy_from_slice(b.as_slice());
+		key_b1[0..b1.len()].copy_from_slice(b1.as_slice());
+		key_b2[0..b2.len()].copy_from_slice(b2.as_slice());
+		key_d[0..d.len()].copy_from_slice(d.as_slice());
+
+		match id {
+			CurrencyId::R => Some(Parent.into()),
+			CurrencyId::A => Some((Parent, Parachain(1), GeneralKey(key_a)).into()),
+			CurrencyId::A1 => Some((Parent, Parachain(1), GeneralKey(key_a1)).into()),
+			CurrencyId::B => Some((Parent, Parachain(2), GeneralKey(key_b)).into()),
+			CurrencyId::B1 => Some((Parent, Parachain(2), GeneralKey(key_b1)).into()),
+			CurrencyId::B2 => Some((Parent, Parachain(2), GeneralKey(key_b2)).into()),
+			CurrencyId::D => Some((Parent, Parachain(4), GeneralKey(key_d)).into()),
+		}
+	}
+}
+impl Convert<MultiLocation, Option<CurrencyId>> for CurrencyIdConvert {
+	fn convert(l: MultiLocation) -> Option<CurrencyId> {
+		let mut key_a = [0u8;32];
+		let mut key_a1 = [0u8;32];
+		let mut key_b = [0u8;32];
+		let mut key_b1 = [0u8;32];
+		let mut key_b2 = [0u8;32];
+		let mut key_d = [0u8;32];
+
+		let a: Vec<u8> = "A".into();
+		let a1: Vec<u8> = "A1".into();
+		let b: Vec<u8> = "B".into();
+		let b1: Vec<u8> = "B1".into();
+		let b2: Vec<u8> = "B2".into();
+		let d: Vec<u8> = "D".into();
+
+		key_a[0..a.len()].copy_from_slice(a.as_slice());
+		key_a1[0..a1.len()].copy_from_slice(a1.as_slice());
+		key_b[0..b.len()].copy_from_slice(b.as_slice());
+		key_b1[0..b1.len()].copy_from_slice(b1.as_slice());
+		key_b2[0..b2.len()].copy_from_slice(b2.as_slice());
+		key_d[0..d.len()].copy_from_slice(d.as_slice());
+
 		if l == MultiLocation::parent() {
 			return Some(CurrencyId::R);
 		}
 		match l {
 			MultiLocation { parents, interior } if parents == 1 => match interior {
-				X2(Parachain(1), GeneralKey(k)) if k == a => Some(CurrencyId::A),
-				X2(Parachain(1), GeneralKey(k)) if k == a1 => Some(CurrencyId::A1),
-				X2(Parachain(2), GeneralKey(k)) if k == b => Some(CurrencyId::B),
-				X2(Parachain(2), GeneralKey(k)) if k == b1 => Some(CurrencyId::B1),
-				X2(Parachain(2), GeneralKey(k)) if k == b2 => Some(CurrencyId::B2),
-				X2(Parachain(4), GeneralKey(k)) if k == d => Some(CurrencyId::D),
+				X2(Parachain(1), GeneralKey(k)) if k == key_a => Some(CurrencyId::A),
+				X2(Parachain(1), GeneralKey(k)) if k == key_a1 => Some(CurrencyId::A1),
+				X2(Parachain(2), GeneralKey(k)) if k == key_b => Some(CurrencyId::B),
+				X2(Parachain(2), GeneralKey(k)) if k == key_b1 => Some(CurrencyId::B1),
+				X2(Parachain(2), GeneralKey(k)) if k == key_b2 => Some(CurrencyId::B2),
+				X2(Parachain(4), GeneralKey(k)) if k == key_d => Some(CurrencyId::D),
 				_ => None,
 			},
 			MultiLocation { parents, interior } if parents == 0 => match interior {
-				X1(GeneralKey(k)) if k == a => Some(CurrencyId::A),
-				X1(GeneralKey(k)) if k == b => Some(CurrencyId::B),
-				X1(GeneralKey(k)) if k == a1 => Some(CurrencyId::A1),
-				X1(GeneralKey(k)) if k == b1 => Some(CurrencyId::B1),
-				X1(GeneralKey(k)) if k == b2 => Some(CurrencyId::B2),
-				X1(GeneralKey(k)) if k == d => Some(CurrencyId::D),
+				X1(GeneralKey(k)) if k == key_a => Some(CurrencyId::A),
+				X1(GeneralKey(k)) if k == key_b => Some(CurrencyId::B),
+				X1(GeneralKey(k)) if k == key_a1 => Some(CurrencyId::A1),
+				X1(GeneralKey(k)) if k == key_b1 => Some(CurrencyId::B1),
+				X1(GeneralKey(k)) if k == key_b2 => Some(CurrencyId::B2),
+				X1(GeneralKey(k)) if k == key_d => Some(CurrencyId::D),
 				_ => None,
 			},
 			_ => None,

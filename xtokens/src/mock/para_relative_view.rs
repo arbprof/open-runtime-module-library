@@ -19,7 +19,7 @@ use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
 use xcm_builder::{
-	AccountId32Aliases, AllowTopLevelPaidExecutionFrom, EnsureXcmOrigin, FixedWeightBounds, LocationInverter,
+	AccountId32Aliases, AllowTopLevelPaidExecutionFrom, EnsureXcmOrigin, FixedWeightBounds,
 	ParentIsPreset, RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
 	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
 };
@@ -101,7 +101,8 @@ parameter_types! {
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
 	pub const RelayNetwork: NetworkId = NetworkId::Kusama;
 	pub RelayChainOrigin: Origin = cumulus_pallet_xcm::Origin::Relay.into();
-	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
+	pub UniversalLocation: InteriorMultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
+	pub const MaxAssetsIntoHolding: u32 = 64;
 }
 
 pub type LocationToAccountId = (
@@ -183,7 +184,7 @@ impl Config for XcmConfig {
 	type OriginConverter = XcmOriginToCallOrigin;
 	type IsReserve = MultiNativeAsset<AbsoluteReserveProvider>;
 	type IsTeleporter = ();
-	type LocationInverter = LocationInverter<Ancestry>;
+	type UniversalLocation = UniversalLocation;
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
 	type Trader = AllTokensAreCreatedEqualToWeight;
@@ -191,6 +192,14 @@ impl Config for XcmConfig {
 	type AssetTrap = PolkadotXcm;
 	type AssetClaims = PolkadotXcm;
 	type SubscriptionService = PolkadotXcm;
+	type AssetLocker = ();
+	type AssetExchanger = ();
+	type PalletInstancesInfo = AllPalletsWithSystem;
+	type MaxAssetsIntoHolding = MaxAssetsIntoHolding;
+	type FeeManager = ();
+	// No bridges yet...
+	type MessageExporter = ();
+	type UniversalAliases = Nothing;
 }
 
 pub struct ChannelInfo;
@@ -212,6 +221,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToCallOrigin;
 	type WeightInfo = ();
+	type PriceForSiblingDelivery = ();
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
@@ -237,18 +247,23 @@ impl pallet_xcm::Config for Runtime {
 	type XcmTeleportFilter = Nothing;
 	type XcmReserveTransferFilter = Everything;
 	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
-	type LocationInverter = LocationInverter<Ancestry>;
+	type UniversalLocation = UniversalLocation;
 	type Origin = Origin;
 	type Call = Call;
 	const VERSION_DISCOVERY_QUEUE_SIZE: u32 = 100;
 	type AdvertisedXcmVersion = pallet_xcm::CurrentXcmVersion;
+	type Currency = Balances;
+	type CurrencyMatcher = ();
+	type TrustedLockers = ();
+	type SovereignAccountOf = LocationToAccountId;
+	type MaxLockers = ConstU32<8>;
 }
 
 pub struct AccountIdToMultiLocation;
 impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
 	fn convert(account: AccountId) -> MultiLocation {
 		X1(Junction::AccountId32 {
-			network: NetworkId::Any,
+			network: None,
 			id: account.into(),
 		})
 		.into()
@@ -258,19 +273,46 @@ impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
 pub struct RelativeCurrencyIdConvert;
 impl Convert<CurrencyId, Option<MultiLocation>> for RelativeCurrencyIdConvert {
 	fn convert(id: CurrencyId) -> Option<MultiLocation> {
+		let mut key_a = [0u8;32];
+		let mut key_a1 = [0u8;32];
+		let mut key_b = [0u8;32];
+		let mut key_b1 = [0u8;32];
+		let mut key_b2 = [0u8;32];
+		let mut key_d = [0u8;32];
+
+		let a: Vec<u8> = "A".into();
+		let a1: Vec<u8> = "A1".into();
+		let b: Vec<u8> = "B".into();
+		let b1: Vec<u8> = "B1".into();
+		let b2: Vec<u8> = "B2".into();
+		let d: Vec<u8> = "D".into();
+		key_a[0..a.len()].copy_from_slice(a.as_slice());
+		key_a1[0..a1.len()].copy_from_slice(a1.as_slice());
+		key_b[0..b.len()].copy_from_slice(b.as_slice());
+		key_b1[0..b1.len()].copy_from_slice(b1.as_slice());
+		key_b2[0..b2.len()].copy_from_slice(b2.as_slice());
+		key_d[0..d.len()].copy_from_slice(d.as_slice());
+
 		match id {
 			CurrencyId::R => Some(Parent.into()),
-			CurrencyId::A => Some((Parent, Parachain(1), GeneralKey("A".into())).into()),
-			CurrencyId::A1 => Some((Parent, Parachain(1), GeneralKey("A1".into())).into()),
-			CurrencyId::B => Some((Parent, Parachain(2), GeneralKey("B".into())).into()),
-			CurrencyId::B1 => Some((Parent, Parachain(2), GeneralKey("B1".into())).into()),
-			CurrencyId::B2 => Some((Parent, Parachain(2), GeneralKey("B2".into())).into()),
-			CurrencyId::D => Some(GeneralKey("D".into()).into()),
+			CurrencyId::A => Some((Parent, Parachain(1), GeneralKey(key_a)).into()),
+			CurrencyId::A1 => Some((Parent, Parachain(1), GeneralKey(key_a1)).into()),
+			CurrencyId::B => Some((Parent, Parachain(2), GeneralKey(key_b)).into()),
+			CurrencyId::B1 => Some((Parent, Parachain(2), GeneralKey(key_b1)).into()),
+			CurrencyId::B2 => Some((Parent, Parachain(2), GeneralKey(key_b2)).into()),
+			CurrencyId::D => Some(GeneralKey(key_d).into()),
 		}
 	}
 }
 impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 	fn convert(l: MultiLocation) -> Option<CurrencyId> {
+		let mut key_a = [0u8;32];
+		let mut key_a1 = [0u8;32];
+		let mut key_b = [0u8;32];
+		let mut key_b1 = [0u8;32];
+		let mut key_b2 = [0u8;32];
+		let mut key_d = [0u8;32];
+
 		let a: Vec<u8> = "A".into();
 		let a1: Vec<u8> = "A1".into();
 		let b: Vec<u8> = "B".into();
@@ -278,27 +320,34 @@ impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 		let b2: Vec<u8> = "B2".into();
 		let d: Vec<u8> = "D".into();
 
+		key_a[0..a.len()].copy_from_slice(a.as_slice());
+		key_a1[0..a1.len()].copy_from_slice(a1.as_slice());
+		key_b[0..b.len()].copy_from_slice(b.as_slice());
+		key_b1[0..b1.len()].copy_from_slice(b1.as_slice());
+		key_b2[0..b2.len()].copy_from_slice(b2.as_slice());
+		key_d[0..d.len()].copy_from_slice(d.as_slice());
+
 		let self_para_id: u32 = ParachainInfo::parachain_id().into();
 		if l == MultiLocation::parent() {
 			return Some(CurrencyId::R);
 		}
 		match l {
 			MultiLocation { parents, interior } if parents == 1 => match interior {
-				X2(Parachain(1), GeneralKey(k)) if k == a => Some(CurrencyId::A),
-				X2(Parachain(1), GeneralKey(k)) if k == a1 => Some(CurrencyId::A1),
-				X2(Parachain(2), GeneralKey(k)) if k == b => Some(CurrencyId::B),
-				X2(Parachain(2), GeneralKey(k)) if k == b1 => Some(CurrencyId::B1),
-				X2(Parachain(2), GeneralKey(k)) if k == b2 => Some(CurrencyId::B2),
-				X2(Parachain(para_id), GeneralKey(k)) if k == d && para_id == self_para_id => Some(CurrencyId::D),
+				X2(Parachain(1), GeneralKey(k)) if k == key_a => Some(CurrencyId::A),
+				X2(Parachain(1), GeneralKey(k)) if k == key_a1 => Some(CurrencyId::A1),
+				X2(Parachain(2), GeneralKey(k)) if k == key_b => Some(CurrencyId::B),
+				X2(Parachain(2), GeneralKey(k)) if k == key_b1 => Some(CurrencyId::B1),
+				X2(Parachain(2), GeneralKey(k)) if k == key_b2 => Some(CurrencyId::B2),
+				X2(Parachain(para_id), GeneralKey(k)) if k == key_d && para_id == self_para_id => Some(CurrencyId::D),
 				_ => None,
 			},
 			MultiLocation { parents, interior } if parents == 0 => match interior {
-				X1(GeneralKey(k)) if k == a => Some(CurrencyId::A),
-				X1(GeneralKey(k)) if k == b => Some(CurrencyId::B),
-				X1(GeneralKey(k)) if k == a1 => Some(CurrencyId::A1),
-				X1(GeneralKey(k)) if k == b1 => Some(CurrencyId::B1),
-				X1(GeneralKey(k)) if k == b2 => Some(CurrencyId::B2),
-				X1(GeneralKey(k)) if k == d => Some(CurrencyId::D),
+				X1(GeneralKey(k)) if k == key_a => Some(CurrencyId::A),
+				X1(GeneralKey(k)) if k == key_b => Some(CurrencyId::B),
+				X1(GeneralKey(k)) if k == key_a1 => Some(CurrencyId::A1),
+				X1(GeneralKey(k)) if k == key_b1 => Some(CurrencyId::B1),
+				X1(GeneralKey(k)) if k == key_b2 => Some(CurrencyId::B2),
+				X1(GeneralKey(k)) if k == key_d => Some(CurrencyId::D),
 				_ => None,
 			},
 			_ => None,
@@ -358,7 +407,7 @@ impl orml_xtokens::Config for Runtime {
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
 	type BaseXcmWeight = ConstU64<100_000_000>;
-	type LocationInverter = LocationInverter<Ancestry>;
+	type UniversalLocation = UniversalLocation;
 	type MaxAssetsForTransfer = MaxAssetsForTransfer;
 	type ReserveProvider = RelativeReserveProvider;
 }

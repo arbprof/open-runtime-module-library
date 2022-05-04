@@ -1,6 +1,6 @@
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{ConstU128, ConstU32, ConstU64, Everything},
+	traits::{ConstU128, ConstU32, ConstU64, Everything, Nothing},
 	weights::IdentityFee,
 };
 use frame_system::EnsureRoot;
@@ -12,7 +12,7 @@ use polkadot_runtime_parachains::{configuration, origin, shared, ump};
 use xcm::latest::prelude::*;
 use xcm_builder::{
 	AccountId32Aliases, AllowTopLevelPaidExecutionFrom, ChildParachainAsNative, ChildParachainConvertsVia,
-	CurrencyAdapter as XcmCurrencyAdapter, FixedWeightBounds, IsConcrete, LocationInverter, SignedAccountId32AsNative,
+	CurrencyAdapter as XcmCurrencyAdapter, FixedWeightBounds, IsConcrete, SignedAccountId32AsNative,
 	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, UsingComponents,
 };
 use xcm_executor::{Config, XcmExecutor};
@@ -66,9 +66,10 @@ impl configuration::Config for Runtime {
 }
 
 parameter_types! {
-	pub const KsmLocation: MultiLocation = Here.into();
+	pub const KsmLocation: MultiLocation = Here.into_location();
 	pub const KusamaNetwork: NetworkId = NetworkId::Kusama;
-	pub Ancestry: MultiLocation = Here.into();
+	pub UniversalLocation: InteriorMultiLocation = KusamaNetwork::get().into();
+	pub const MaxAssetsIntoHolding: u32 = 64;
 }
 
 pub type SovereignAccountOf = (
@@ -96,7 +97,7 @@ impl Config for XcmConfig {
 	type OriginConverter = LocalOriginConverter;
 	type IsReserve = ();
 	type IsTeleporter = ();
-	type LocationInverter = LocationInverter<Ancestry>;
+	type UniversalLocation = UniversalLocation;
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
 	type Trader = UsingComponents<IdentityFee<Balance>, KsmLocation, AccountId, Balances, ()>;
@@ -104,6 +105,14 @@ impl Config for XcmConfig {
 	type AssetTrap = ();
 	type AssetClaims = ();
 	type SubscriptionService = XcmPallet;
+	type AssetLocker = ();
+	type AssetExchanger = ();
+	type PalletInstancesInfo = AllPalletsWithSystem;
+	type MaxAssetsIntoHolding = MaxAssetsIntoHolding;
+	type FeeManager = ();
+	// No bridges yet...
+	type MessageExporter = ();
+	type UniversalAliases = Nothing;
 }
 
 pub type LocalOriginToLocation = SignedToAccountId32<Origin, AccountId, KusamaNetwork>;
@@ -119,11 +128,16 @@ impl pallet_xcm::Config for Runtime {
 	type XcmTeleportFilter = Everything;
 	type XcmReserveTransferFilter = Everything;
 	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
-	type LocationInverter = LocationInverter<Ancestry>;
+	type UniversalLocation = UniversalLocation;
 	type Origin = Origin;
 	type Call = Call;
 	const VERSION_DISCOVERY_QUEUE_SIZE: u32 = 100;
 	type AdvertisedXcmVersion = pallet_xcm::CurrentXcmVersion;
+	type Currency = Balances;
+	type CurrencyMatcher = ();
+	type TrustedLockers = ();
+	type SovereignAccountOf = SovereignAccountOf;
+	type MaxLockers = ConstU32<8>;
 }
 
 impl ump::Config for Runtime {

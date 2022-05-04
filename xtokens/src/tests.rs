@@ -69,7 +69,7 @@ fn send_relay_chain_asset_to_relay_chain() {
 				MultiLocation::new(
 					1,
 					X1(Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					})
 				)
@@ -104,7 +104,7 @@ fn send_relay_chain_asset_to_relay_chain_with_fee() {
 				MultiLocation::new(
 					1,
 					X1(Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					})
 				)
@@ -138,7 +138,7 @@ fn cannot_lost_fund_on_send_failed() {
 						Parent,
 						Parachain(100),
 						Junction::AccountId32 {
-							network: NetworkId::Kusama,
+							network: Some(NetworkId::Kusama),
 							id: BOB.into(),
 						},
 					)
@@ -172,7 +172,7 @@ fn send_relay_chain_asset_to_sibling() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -214,7 +214,7 @@ fn send_relay_chain_asset_to_sibling_with_fee() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -262,7 +262,7 @@ fn send_sibling_asset_to_reserve_sibling() {
 					Parent,
 					Parachain(2),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -287,7 +287,7 @@ fn send_sibling_asset_to_reserve_sibling() {
 					Parent,
 					Parachain(1),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: ALICE.into(),
 					},
 				)
@@ -327,7 +327,7 @@ fn send_sibling_asset_to_reserve_sibling_with_fee() {
 					Parent,
 					Parachain(2),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -370,7 +370,7 @@ fn send_sibling_asset_to_reserve_sibling_with_distinct_fee() {
 					Parent,
 					Parachain(2),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -416,7 +416,7 @@ fn send_sibling_asset_to_reserve_sibling_with_distinct_fee_index_works() {
 					Parent,
 					Parachain(2),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -461,7 +461,7 @@ fn send_sibling_asset_to_non_reserve_sibling() {
 					X2(
 						Parachain(3),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -508,7 +508,7 @@ fn send_sibling_asset_to_non_reserve_sibling_with_fee() {
 					X2(
 						Parachain(3),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -550,7 +550,7 @@ fn send_self_parachain_asset_to_sibling() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -587,7 +587,7 @@ fn send_self_parachain_asset_to_sibling_with_fee() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -625,7 +625,7 @@ fn send_self_parachain_asset_to_sibling_with_distinct_fee() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -679,7 +679,7 @@ fn sending_sibling_asset_to_reserve_sibling_with_relay_fee_works() {
 					Parent,
 					Parachain(2),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -743,7 +743,7 @@ fn sending_sibling_asset_to_reserve_sibling_with_relay_fee_not_enough() {
 					Parent,
 					Parachain(2),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -793,7 +793,7 @@ fn transfer_asset_with_relay_fee_failed() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -817,7 +817,7 @@ fn transfer_asset_with_relay_fee_failed() {
 						Parent,
 						Parachain(3),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -841,7 +841,7 @@ fn transfer_asset_with_relay_fee_failed() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -865,7 +865,7 @@ fn transfer_asset_with_relay_fee_failed() {
 						Parent,
 						Parachain(1),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -882,17 +882,21 @@ fn transfer_asset_with_relay_fee_failed() {
 fn transfer_no_reserve_assets_fails() {
 	TestNet::reset();
 
+	let mut key_b = [0u8;32];
+	let b: Vec<u8> = "B".into();
+	key_b[0..b.len()].copy_from_slice(b.as_slice());
+
 	ParaA::execute_with(|| {
 		assert_noop!(
 			ParaXTokens::transfer_multiasset(
 				Some(ALICE).into(),
-				Box::new((X1(GeneralKey("B".into())).into(), 100).into()),
+				Box::new((X1(GeneralKey(key_b)), 100).into()),
 				Box::new(
 					(
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into()
 						}
 					)
@@ -909,18 +913,22 @@ fn transfer_no_reserve_assets_fails() {
 fn transfer_to_self_chain_fails() {
 	TestNet::reset();
 
+	let mut key_a = [0u8;32];
+	let a: Vec<u8> = "A".into();
+	key_a[0..a.len()].copy_from_slice(a.as_slice());
+
 	ParaA::execute_with(|| {
 		assert_noop!(
 			ParaXTokens::transfer_multiasset(
 				Some(ALICE).into(),
-				Box::new(MultiAsset::sibling_parachain_asset(1, "A".into(), 100).into()),
+				Box::new(MultiAsset::sibling_parachain_asset(1, key_a, 100).into()),
 				Box::new(
 					MultiLocation::new(
 						1,
 						X2(
 							Parachain(1),
 							Junction::AccountId32 {
-								network: NetworkId::Any,
+								network: None,
 								id: BOB.into()
 							}
 						)
@@ -938,16 +946,20 @@ fn transfer_to_self_chain_fails() {
 fn transfer_to_invalid_dest_fails() {
 	TestNet::reset();
 
+	let mut key_a = [0u8;32];
+	let a: Vec<u8> = "A".into();
+	key_a[0..a.len()].copy_from_slice(a.as_slice());
+
 	ParaA::execute_with(|| {
 		assert_noop!(
 			ParaXTokens::transfer_multiasset(
 				Some(ALICE).into(),
-				Box::new(MultiAsset::sibling_parachain_asset(1, "A".into(), 100).into()),
+				Box::new(MultiAsset::sibling_parachain_asset(1, key_a, 100).into()),
 				Box::new(
 					MultiLocation::new(
 						0,
 						X1(Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into()
 						})
 					)
@@ -973,7 +985,7 @@ fn send_as_sovereign() {
 
 		let call =
 			relay::Call::System(frame_system::Call::<relay::Runtime>::remark_with_event { remark: vec![1, 1, 1] });
-		let assets: MultiAsset = (Here, 1_000_000_000_000).into();
+		let assets: MultiAsset = (Here, 1_000_000_000_000u128).into();
 		assert_ok!(para::OrmlXcm::send_as_sovereign(
 			para::Origin::root(),
 			Box::new(Parent.into()),
@@ -984,7 +996,7 @@ fn send_as_sovereign() {
 					weight_limit: Limited(2_000_000_000)
 				},
 				Instruction::Transact {
-					origin_type: SovereignAccount,
+					origin_kind: SovereignAccount,
 					require_weight_at_most: 1_000_000_000,
 					call: call.encode().into(),
 				}
@@ -1015,7 +1027,7 @@ fn send_as_sovereign_fails_if_bad_origin() {
 
 		let call =
 			relay::Call::System(frame_system::Call::<relay::Runtime>::remark_with_event { remark: vec![1, 1, 1] });
-		let assets: MultiAsset = (Here, 1_000_000_000_000).into();
+		let assets: MultiAsset = (Here, 1_000_000_000_000u128).into();
 		assert_err!(
 			para::OrmlXcm::send_as_sovereign(
 				para::Origin::signed(ALICE),
@@ -1027,7 +1039,7 @@ fn send_as_sovereign_fails_if_bad_origin() {
 						weight_limit: Limited(10_000_000)
 					},
 					Instruction::Transact {
-						origin_type: SovereignAccount,
+						origin_kind: SovereignAccount,
 						require_weight_at_most: 1_000_000_000,
 						call: call.encode().into(),
 					}
@@ -1076,7 +1088,7 @@ fn send_with_zero_fee_should_yield_an_error() {
 						X2(
 							Parachain(2),
 							Junction::AccountId32 {
-								network: NetworkId::Any,
+								network: None,
 								id: BOB.into(),
 							}
 						)
@@ -1110,7 +1122,7 @@ fn send_with_insufficient_fee_traps_assets() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -1153,7 +1165,7 @@ fn send_with_fee_should_handle_overflow() {
 						X2(
 							Parachain(2),
 							Junction::AccountId32 {
-								network: NetworkId::Any,
+								network: None,
 								id: BOB.into(),
 							}
 						)
@@ -1204,7 +1216,7 @@ fn specifying_more_than_assets_limit_should_error() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -1245,7 +1257,7 @@ fn sending_non_fee_assets_with_different_reserve_should_fail() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -1281,7 +1293,7 @@ fn specifying_a_non_existent_asset_index_should_fail() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -1309,7 +1321,7 @@ fn send_with_zero_amount() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -1330,7 +1342,7 @@ fn send_with_zero_amount() {
 						Parent,
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -1362,7 +1374,7 @@ fn send_self_parachain_asset_to_sibling_relative_parachain() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -1408,7 +1420,7 @@ fn send_sibling_asset_to_reserve_sibling_with_relative_view() {
 					Parent,
 					Parachain(4),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: BOB.into(),
 					},
 				)
@@ -1436,7 +1448,7 @@ fn send_sibling_asset_to_reserve_sibling_with_relative_view() {
 					Parent,
 					Parachain(1),
 					Junction::AccountId32 {
-						network: NetworkId::Any,
+						network: None,
 						id: ALICE.into(),
 					},
 				)
@@ -1476,7 +1488,7 @@ fn send_relative_view_sibling_asset_to_non_reserve_sibling() {
 					X2(
 						Parachain(2),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -1524,7 +1536,7 @@ fn send_relay_chain_asset_to_relative_view_sibling() {
 					X2(
 						Parachain(4),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						}
 					)
@@ -1563,7 +1575,7 @@ fn unsupported_multilocation_should_be_filtered() {
 						Parent,
 						Parachain(5), // parachain 4 is not supported list.
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
@@ -1584,7 +1596,7 @@ fn unsupported_multilocation_should_be_filtered() {
 						Parent,
 						Parachain(5),
 						Junction::AccountId32 {
-							network: NetworkId::Any,
+							network: None,
 							id: BOB.into(),
 						},
 					)
