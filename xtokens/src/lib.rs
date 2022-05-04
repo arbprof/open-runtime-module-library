@@ -37,7 +37,7 @@ use sp_runtime::{
 use sp_std::{prelude::*, result::Result};
 
 use xcm::prelude::*;
-use xcm_executor::traits::{InvertLocation, WeightBounds};
+use xcm_executor::traits::{WeightBounds};
 
 pub use module::*;
 use orml_traits::{
@@ -107,8 +107,8 @@ pub mod module {
 		#[pallet::constant]
 		type BaseXcmWeight: Get<Weight>;
 
-		/// Means of inverting a location.
-		type LocationInverter: InvertLocation;
+		/// This chain's Universal Location.
+		type UniversalLocation: Get<InteriorMultiLocation>;
 
 		/// The maximum number of distinct assets allowed to be transferred in a
 		/// single helper extrinsic.
@@ -625,7 +625,8 @@ pub mod module {
 			};
 
 			let weight = T::Weigher::weight(&mut msg).map_err(|()| Error::<T>::UnweighableMessage)?;
-			T::XcmExecutor::execute_xcm_in_credit(origin_location, msg, weight, weight)
+			let hash = msg.using_encoded(sp_io::hashing::blake2_256);
+			T::XcmExecutor::execute_xcm_in_credit(origin_location, msg, hash, weight, weight)
 				.ensure_complete()
 				.map_err(|error| {
 					log::error!("Failed execute transfer message with {:?}", error);
@@ -645,8 +646,7 @@ pub mod module {
 			Ok(Xcm(vec![
 				WithdrawAsset(assets.clone()),
 				DepositReserveAsset {
-					assets: All.into(),
-					max_assets: assets.len() as u32,
+					assets: Wild(AllCounted(assets.len() as u32)),
 					dest: dest.clone(),
 					xcm: Xcm(vec![
 						Self::buy_execution(fee, &dest, dest_weight)?,
@@ -705,8 +705,7 @@ pub mod module {
 					xcm: Xcm(vec![
 						Self::buy_execution(half(&fee), &reserve, dest_weight)?,
 						DepositReserveAsset {
-							assets: All.into(),
-							max_assets: assets.len() as u32,
+							assets: Wild(AllCounted(assets.len() as u32)),
 							dest: reanchored_dest,
 							xcm: Xcm(vec![
 								Self::buy_execution(half(&fee), &dest, dest_weight)?,
@@ -720,8 +719,7 @@ pub mod module {
 
 		fn deposit_asset(recipient: MultiLocation, max_assets: u32) -> Instruction<()> {
 			DepositAsset {
-				assets: All.into(),
-				max_assets,
+				assets: Wild(AllCounted(max_assets)),
 				beneficiary: recipient,
 			}
 		}
@@ -731,9 +729,9 @@ pub mod module {
 			at: &MultiLocation,
 			weight: Weight,
 		) -> Result<Instruction<()>, DispatchError> {
-			let ancestry = T::LocationInverter::ancestry();
+			let ancestry = T::UniversalLocation::get();
 			let fees = asset
-				.reanchored(at, &ancestry)
+				.reanchored(at, ancestry)
 				.map_err(|_| Error::<T>::CannotReanchor)?;
 			Ok(BuyExecution {
 				fees,
@@ -792,8 +790,7 @@ pub mod module {
 						SelfReserveAsset => Xcm(vec![
 							WithdrawAsset(MultiAssets::from(asset)),
 							DepositReserveAsset {
-								assets: All.into(),
-								max_assets: 1,
+								assets: Wild(AllCounted(1)),
 								dest,
 								xcm: Xcm(vec![]),
 							},
@@ -860,8 +857,7 @@ pub mod module {
 						SelfReserveAsset => Xcm(vec![
 							WithdrawAsset(assets.clone()),
 							DepositReserveAsset {
-								assets: All.into(),
-								max_assets: assets.len() as u32,
+								assets: Wild(AllCounted(assets.len() as u32)),
 								dest,
 								xcm: Xcm(vec![]),
 							},
