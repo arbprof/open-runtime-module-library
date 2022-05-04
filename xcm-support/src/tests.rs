@@ -17,8 +17,16 @@ pub struct CurrencyIdConvert;
 impl Convert<MultiLocation, Option<TestCurrencyId>> for CurrencyIdConvert {
 	fn convert(l: MultiLocation) -> Option<TestCurrencyId> {
 		use TestCurrencyId::*;
-		let token_a: Vec<u8> = "TokenA".into();
-		let token_b: Vec<u8> = "TokenB".into();
+		let mut token_a = [0u8; 32];
+		let mut token_b = [0u8; 32];
+		let mut key: Vec<u8> = "TokenA".into();
+		for (i, byte) in key.iter().enumerate() {
+			token_a[i] = *byte
+		}
+		key = "TokenB".into();
+		for (i, byte) in key.iter().enumerate() {
+			token_b[i] = *byte
+		}
 
 		if l == MultiLocation::parent() {
 			return Some(RelayChainToken);
@@ -37,28 +45,48 @@ type MatchesCurrencyId = IsNativeConcrete<TestCurrencyId, CurrencyIdConvert>;
 
 #[test]
 fn is_native_concrete_matches_native_currencies() {
+	let mut token_a = [0u8; 32];
+		let mut token_b = [0u8; 32];
+		let mut key: Vec<u8> = "TokenA".into();
+		for (i, byte) in key.iter().enumerate() {
+			token_a[i] = *byte
+		}
+		key = "TokenB".into();
+		for (i, byte) in key.iter().enumerate() {
+			token_b[i] = *byte
+		}
 	assert_eq!(
 		MatchesCurrencyId::matches_fungible(&MultiAsset::parent_asset(100)),
 		Some(100),
 	);
 
 	assert_eq!(
-		MatchesCurrencyId::matches_fungible(&MultiAsset::sibling_parachain_asset(1, "TokenA".into(), 100)),
+		MatchesCurrencyId::matches_fungible(&MultiAsset::sibling_parachain_asset(1, token_a, 100)),
 		Some(100),
 	);
 
 	assert_eq!(
-		MatchesCurrencyId::matches_fungible(&MultiAsset::sibling_parachain_asset(2, "TokenB".into(), 100)),
+		MatchesCurrencyId::matches_fungible(&MultiAsset::sibling_parachain_asset(2, token_b, 100)),
 		Some(100),
 	);
 }
 
 #[test]
 fn is_native_concrete_does_not_matches_non_native_currencies() {
+	let mut token_c = [0u8; 32];
+		let mut token_b = [0u8; 32];
+		let mut key: Vec<u8> = "TokenC".into();
+		for (i, byte) in key.iter().enumerate() {
+			token_c[i] = *byte
+		}
+		key = "TokenB".into();
+		for (i, byte) in key.iter().enumerate() {
+			token_b[i] = *byte
+		}
 	assert!(
 		<MatchesCurrencyId as MatchesFungible<u128>>::matches_fungible(&MultiAsset::sibling_parachain_asset(
 			2,
-			"TokenC".into(),
+			token_c,
 			100
 		))
 		.is_none()
@@ -66,7 +94,7 @@ fn is_native_concrete_does_not_matches_non_native_currencies() {
 	assert!(
 		<MatchesCurrencyId as MatchesFungible<u128>>::matches_fungible(&MultiAsset::sibling_parachain_asset(
 			1,
-			"TokenB".into(),
+			token_b,
 			100
 		))
 		.is_none()
@@ -74,7 +102,7 @@ fn is_native_concrete_does_not_matches_non_native_currencies() {
 	assert!(
 		<MatchesCurrencyId as MatchesFungible<u128>>::matches_fungible(&MultiAsset {
 			fun: Fungible(100),
-			id: Concrete(MultiLocation::new(1, X1(GeneralKey("TokenB".into())))),
+			id: Concrete(MultiLocation::new(1, X1(GeneralKey(token_b)))),
 		})
 		.is_none()
 	);
@@ -82,19 +110,24 @@ fn is_native_concrete_does_not_matches_non_native_currencies() {
 
 #[test]
 fn multi_native_asset() {
-	assert!(MultiNativeAsset::<AbsoluteReserveProvider>::filter_asset_location(
+	let mut token_a = [0u8; 32];
+	let mut key: Vec<u8> = "TokenA".into();
+	for (i, byte) in key.iter().enumerate() {
+		token_a[i] = *byte
+	}
+	assert!(MultiNativeAsset::<AbsoluteReserveProvider>::contains(
 		&MultiAsset {
 			fun: Fungible(10),
 			id: Concrete(MultiLocation::parent())
 		},
 		&Parent.into()
 	));
-	assert!(MultiNativeAsset::<AbsoluteReserveProvider>::filter_asset_location(
-		&MultiAsset::sibling_parachain_asset(1, "TokenA".into(), 100),
+	assert!(MultiNativeAsset::<AbsoluteReserveProvider>::contains(
+		&MultiAsset::sibling_parachain_asset(1, token_a, 100),
 		&MultiLocation::new(1, X1(Parachain(1))),
 	));
-	assert!(!MultiNativeAsset::<AbsoluteReserveProvider>::filter_asset_location(
-		&MultiAsset::sibling_parachain_asset(1, "TokenA".into(), 100),
+	assert!(!MultiNativeAsset::<AbsoluteReserveProvider>::contains(
+		&MultiAsset::sibling_parachain_asset(1, token_a, 100),
 		&MultiLocation::parent(),
 	));
 }

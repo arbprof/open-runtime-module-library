@@ -12,7 +12,7 @@ use sp_std::{
 	result,
 };
 
-use xcm::latest::{Error as XcmError, MultiAsset, MultiLocation, Result};
+use xcm::latest::{Error as XcmError, MultiAsset, MultiLocation, Result, XcmContext};
 use xcm_executor::{
 	traits::{Convert as MoreConvert, MatchesFungible, TransactAsset},
 	Assets,
@@ -145,7 +145,7 @@ impl<
 		DepositFailureHandler,
 	>
 {
-	fn deposit_asset(asset: &MultiAsset, location: &MultiLocation) -> Result {
+	fn deposit_asset(asset: &MultiAsset, location: &MultiLocation,  _context: &XcmContext) -> Result {
 		match (
 			AccountIdConvert::convert_ref(location),
 			CurrencyIdConvert::convert(asset.clone()),
@@ -160,7 +160,7 @@ impl<
 		}
 	}
 
-	fn withdraw_asset(asset: &MultiAsset, location: &MultiLocation) -> result::Result<Assets, XcmError> {
+	fn withdraw_asset(asset: &MultiAsset, location: &MultiLocation,  _maybe_context: Option<&XcmContext>) -> result::Result<Assets, XcmError> {
 		UnknownAsset::withdraw(asset, location).or_else(|_| {
 			let who = AccountIdConvert::convert_ref(location)
 				.map_err(|_| XcmError::from(Error::AccountIdConversionFailed))?;

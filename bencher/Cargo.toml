@@ -24,18 +24,18 @@ serde_json = {version = "1.0.68", optional = true }
 hash-db = { version = "0.15.2", default-features = false, optional = true }
 bencher-procedural = { path = "bencher-procedural", default-features = false }
 codec = { package = "parity-scale-codec", version = "3.0.0", features = ["derive"], default-features = false }
-sp-core = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19" }
-sp-std = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19" }
-sp-io = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19" }
-sp-runtime-interface = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19" }
-sp-state-machine = { git = "https://github.com/purestake/substrate", default-features = false, optional = true , branch = "moonbeam-polkadot-v0.9.19" }
-sc-executor = { git = "https://github.com/purestake/substrate", default-features = false, features = ["wasmtime"], optional = true , branch = "moonbeam-polkadot-v0.9.19" }
-sc-executor-common = { git = "https://github.com/purestake/substrate", optional = true , branch = "moonbeam-polkadot-v0.9.19" }
-sc-client-db = { git = "https://github.com/purestake/substrate", default-features = false, features = ["with-kvdb-rocksdb"], optional = true , branch = "moonbeam-polkadot-v0.9.19" }
-sp-maybe-compressed-blob = { git = "https://github.com/purestake/substrate", default-features = false, optional = true , branch = "moonbeam-polkadot-v0.9.19" }
-frame-benchmarking = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19" }
-sp-externalities = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19" }
-sp-storage = { git = "https://github.com/purestake/substrate", default-features = false, optional = true , branch = "moonbeam-polkadot-v0.9.19" }
+sp-core = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-std = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-io = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-runtime-interface = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-state-machine = { git = "https://github.com/purestake/substrate", default-features = false, optional = true , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sc-executor = { git = "https://github.com/purestake/substrate", default-features = false, features = ["wasmtime"], optional = true , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sc-executor-common = { git = "https://github.com/purestake/substrate", optional = true , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sc-client-db = { git = "https://github.com/purestake/substrate", default-features = false, features = ["with-kvdb-rocksdb"], optional = true , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-maybe-compressed-blob = { git = "https://github.com/purestake/substrate", default-features = false, optional = true , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+frame-benchmarking = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-externalities = { git = "https://github.com/purestake/substrate", default-features = false , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
+sp-storage = { git = "https://github.com/purestake/substrate", default-features = false, optional = true , branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
 
 [features]
 default = ["std"]
