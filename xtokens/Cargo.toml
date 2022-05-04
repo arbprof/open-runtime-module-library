@@ -39,8 +39,6 @@ parachain-info = { git = "https://github.com/purestake/cumulus", branch = "moonb
 
 # polkadot
 polkadot-parachain = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
-xcm = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
-xcm-executor = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
 xcm-builder = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
 pallet-xcm = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
 polkadot-runtime-parachains = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.19-gorka-xcm-v3" }
@@ -54,7 +52,6 @@ default = ["std"]
 std = [
 	"serde",
 	"codec/std",
-	"sp-core/std",
 	"scale-info/std",
 	"sp-runtime/std",
 	"sp-std/std",
